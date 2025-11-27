@@ -15,17 +15,38 @@ export default {
     try {
       const data = await request.json();
 
+      // デバッグ: 受信したデータをログに記録
+      console.log('Received webhook data:', JSON.stringify(data, null, 2));
+
+      if (data.action) {
+        console.log('Event type:', data.action.type);
+        console.log('Card:', data.action.data?.card?.name);
+        console.log('List:', data.action.data?.list?.name);
+        console.log('Label:', data.action.data?.label?.name);
+      }
+
       // ラベル追加イベントのみ処理
       if (data.action?.type === 'addLabelToCard') {
         const card = data.action.data.card;
         const label = data.action.data.label;
-        const list = data.action.data.list;
 
-        // 特定のリスト「todo(アプリ・サーバー)」のみ処理
-        if (list?.name === 'todo(アプリ・サーバー)') {
+        console.log('Label added to card:', card.name, 'Label:', label.name);
+
+        // Trello APIでカード情報を取得してリスト名を確認
+        const cardDetails = await getCardDetails(env, card.id);
+        const listName = cardDetails.list?.name;
+
+        console.log('Card is in list:', listName);
+
+        // 特定のリスト「ToDo (アプリ)」または「ToDo (サーバー)」のみ処理
+        if (listName === 'ToDo (アプリ)' || listName === 'ToDo (サーバー)') {
+          console.log('Matching list found! Posting to Mattermost...');
           // カードのURLを生成
           const cardUrl = `https://trello.com/c/${card.shortLink}`;
           await postToMattermost(env, label.name, card.name, cardUrl);
+          console.log('Posted to Mattermost successfully');
+        } else {
+          console.log('List name does not match. Expected: "ToDo (アプリ)" or "ToDo (サーバー)", Got:', listName);
         }
       }
 
@@ -36,6 +57,22 @@ export default {
     }
   }
 };
+
+/**
+ * Trello APIでカード詳細を取得する関数
+ */
+async function getCardDetails(env, cardId) {
+  const url = `https://api.trello.com/1/cards/${cardId}?key=${env.TRELLO_API_KEY}&token=${env.TRELLO_TOKEN}&list=true`;
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Trello API error: ${response.status} ${errorText}`);
+  }
+
+  return response.json();
+}
 
 /**
  * Mattermostに投稿する関数
