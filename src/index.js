@@ -78,9 +78,25 @@ async function getCardDetails(env, cardId) {
  * Mattermostに投稿する関数
  */
 async function postToMattermost(env, 担当者名, タスク名, cardUrl) {
+  // 担当者メンションマッピングを取得
+  let assigneeMentions = {};
+  try {
+    if (env.ASSIGNEE_MENTIONS) {
+      assigneeMentions = JSON.parse(env.ASSIGNEE_MENTIONS);
+    }
+  } catch (error) {
+    console.error('Failed to parse ASSIGNEE_MENTIONS:', error);
+  }
+
+  // 担当者名に対応するメンションを取得
+  const mention = assigneeMentions[担当者名] || '';
+
   // メッセージフォーマット
+  // 担当者：{担当者名}-{メンション} の形式
+  const assigneeText = mention ? `${担当者名}-${mention}` : 担当者名;
+
   const message = `✅ タスクが割り当てられました
-- 担当者: **${担当者名}**
+- 担当者: **${assigneeText}**
 - タスク: [${タスク名}](${cardUrl})`;
 
   // Mattermost API v4に投稿
