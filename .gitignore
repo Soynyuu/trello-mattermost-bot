@@ -5,3 +5,10 @@ dist/
 *.log
 .DS_Store
 taiou.csv
+
+# TypeScript
+*.tsbuildinfo
+
+# Old JavaScript files (after migration)
+src/index.js
+setup-assignee-mapping.js

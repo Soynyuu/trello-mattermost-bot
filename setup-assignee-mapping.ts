@@ -4,20 +4,29 @@
  * 環境変数用のJSON文字列を生成するスクリプト
  *
  * Usage:
- *   node setup-assignee-mapping.js
+ *   npm run setup-assignees
  *
  * Output:
  *   環境変数ASSIGNEE_MENTIONSに設定すべきJSON文字列を出力
  */
 
-const fs = require('fs');
-const path = require('path');
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-const CSV_FILE = path.join(__dirname, 'taiou.csv');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-function parseCSV(csvContent) {
+const CSV_FILE = join(__dirname, 'taiou.csv');
+
+interface AssigneeMentions {
+  [key: string]: string;
+}
+
+function parseCSV(csvContent: string): AssigneeMentions {
   const lines = csvContent.trim().split('\n');
-  const mapping = {};
+  const mapping: AssigneeMentions = {};
 
   for (const line of lines) {
     const [name, mention] = line.split(',').map(s => s.trim());
@@ -29,10 +38,10 @@ function parseCSV(csvContent) {
   return mapping;
 }
 
-function main() {
+function main(): void {
   try {
     // CSVファイルを読み込み
-    const csvContent = fs.readFileSync(CSV_FILE, 'utf-8');
+    const csvContent = readFileSync(CSV_FILE, 'utf-8');
 
     // CSVをパースしてJSONオブジェクトに変換
     const mapping = parseCSV(csvContent);
@@ -53,7 +62,7 @@ function main() {
     console.log(JSON.stringify(mapping, null, 2));
 
   } catch (error) {
-    console.error('エラーが発生しました:', error.message);
+    console.error('エラーが発生しました:', (error as Error).message);
     process.exit(1);
   }
 }

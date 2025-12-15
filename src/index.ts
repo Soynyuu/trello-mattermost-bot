@@ -1,7 +1,50 @@
 // Cloudflare Workers for Trello → Mattermost integration
 
+interface Env {
+  MATTERMOST_BOT_TOKEN: string;
+  MATTERMOST_HOST: string;
+  MATTERMOST_CHANNEL_ID: string;
+  TRELLO_API_KEY: string;
+  TRELLO_TOKEN: string;
+  ASSIGNEE_MENTIONS?: string;
+}
+
+interface TrelloWebhookData {
+  action?: {
+    type: string;
+    data: {
+      card?: {
+        id: string;
+        name: string;
+        shortLink: string;
+      };
+      label?: {
+        name: string;
+      };
+      list?: {
+        name: string;
+      };
+    };
+  };
+}
+
+interface TrelloCardDetails {
+  list?: {
+    name: string;
+  };
+}
+
+interface MattermostPostPayload {
+  channel_id: string;
+  message: string;
+}
+
+interface AssigneeMentions {
+  [key: string]: string;
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request: Request, env: Env): Promise<Response> {
     // Trello webhookの検証（HEADリクエスト）
     if (request.method === 'HEAD') {
       return new Response('OK', { status: 200 });
@@ -13,7 +56,7 @@ export default {
     }
 
     try {
-      const data = await request.json();
+      const data = await request.json() as TrelloWebhookData;
 
       // デバッグ: 受信したデータをログに記録
       console.log('Received webhook data:', JSON.stringify(data, null, 2));
@@ -29,6 +72,10 @@ export default {
       if (data.action?.type === 'addLabelToCard') {
         const card = data.action.data.card;
         const label = data.action.data.label;
+
+        if (!card || !label) {
+          return new Response('OK', { status: 200 });
+        }
 
         console.log('Label added to card:', card.name, 'Label:', label.name);
 
@@ -61,7 +108,7 @@ export default {
 /**
  * Trello APIでカード詳細を取得する関数
  */
-async function getCardDetails(env, cardId) {
+async function getCardDetails(env: Env, cardId: string): Promise<TrelloCardDetails> {
   const url = `https://api.trello.com/1/cards/${cardId}?key=${env.TRELLO_API_KEY}&token=${env.TRELLO_TOKEN}&list=true`;
 
   const response = await fetch(url);
@@ -77,9 +124,9 @@ async function getCardDetails(env, cardId) {
 /**
  * Mattermostに投稿する関数
  */
-async function postToMattermost(env, 担当者名, タスク名, cardUrl) {
+async function postToMattermost(env: Env, 担当者名: string, タスク名: string, cardUrl: string): Promise<void> {
   // 担当者メンションマッピングを取得
-  let assigneeMentions = {};
+  let assigneeMentions: AssigneeMentions = {};
   try {
     if (env.ASSIGNEE_MENTIONS) {
       assigneeMentions = JSON.parse(env.ASSIGNEE_MENTIONS);
@@ -100,7 +147,7 @@ async function postToMattermost(env, 担当者名, タスク名, cardUrl) {
 - タスク: [${タスク名}](${cardUrl})`;
 
   // Mattermost API v4に投稿
-  const payload = {
+  const payload: MattermostPostPayload = {
     channel_id: env.MATTERMOST_CHANNEL_ID,
     message: message
   };
@@ -119,5 +166,5 @@ async function postToMattermost(env, 担当者名, タスク名, cardUrl) {
     throw new Error(`Mattermost API error: ${response.status} ${errorText}`);
   }
 
-  return response.json();
+  await response.json();
 }
