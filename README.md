@@ -1,12 +1,24 @@
 # Trello to Mattermost Bot
 
-Cloudflare Workers を使用した Trello から Mattermost への通知 Bot です。
+Cloudflare Workers を使用した Trello から Mattermost への通知 Bot です。TypeScript で型安全に実装されています。
 
 ## 機能
 
 Trello の特定リスト「todo(アプリ・サーバー)」でカードにラベルが追加されたら、Mattermost の指定チャンネルに通知を送信します。
 
+## 技術スタック
+
+- **TypeScript**: 型安全性と開発効率の向上
+- **Cloudflare Workers**: サーバーレス実行環境
+- **Wrangler**: Cloudflare Workersのデプロイメントツール
+
 ## セットアップ
+
+### 依存関係のインストール
+
+```bash
+npm install
+```
 
 ### 環境変数
 
@@ -33,7 +45,7 @@ wrangler secret put TRELLO_TOKEN
 
 2. マッピングのJSON文字列を生成：
    ```bash
-   node setup-assignee-mapping.js
+   npm run setup-assignees
    ```
 
 3. 出力されたJSON文字列を環境変数に設定：
@@ -88,6 +100,39 @@ curl -X POST \
 例：
 ```
 ✅ タスクが割り当てられました
-- 担当者: **折田-@yuki_orita**
+- 担当者: **tellolabel-@mattemost**
 - タスク: [新機能の実装](https://trello.com/c/abc123)
+```
+
+## 開発
+
+### ローカル開発サーバーの起動
+
+```bash
+npm run dev
+```
+
+### TypeScriptの型チェック
+
+```bash
+npx tsc --noEmit
+```
+
+### デプロイ
+
+```bash
+npm run deploy
+```
+
+## プロジェクト構成
+
+```
+.
+├── src/
+│   └── index.ts              # メインのWorkerコード（TypeScript）
+├── setup-assignee-mapping.ts # 担当者メンションマッピング生成スクリプト
+├── package.json              # プロジェクト依存関係
+├── tsconfig.json             # TypeScript設定
+├── wrangler.toml             # Cloudflare Workers設定
+└── README.md                 # このファイル
 ```
