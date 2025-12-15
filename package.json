@@ -1,0 +1,24 @@
+{
+  "name": "trello-mattermost-bot",
+  "version": "1.0.0",
+  "description": "Cloudflare Workers bot for Trello to Mattermost integration",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "setup-assignees": "tsx setup-assignee-mapping.ts"
+  },
+  "keywords": [
+    "trello",
+    "mattermost",
+    "cloudflare-workers",
+    "webhook"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.7.2",
+    "tsx": "^4.19.2"
+  }
+}
