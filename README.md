@@ -39,8 +39,8 @@ wrangler secret put TRELLO_TOKEN
 1. `taiou.csv`ファイルを作成し、以下の形式で担当者とメンションを記載：
    ```csv
    担当者名,@mention
-   折田,@yuki_orita
-   藤原,@ryusei.f
+   例１,@example_1
+   例２,@example_2
    ```
 
 2. マッピングのJSON文字列を生成：
@@ -51,7 +51,7 @@ wrangler secret put TRELLO_TOKEN
 3. 出力されたJSON文字列を環境変数に設定：
    ```bash
    # ローカル開発環境（.dev.vars）
-   ASSIGNEE_MENTIONS='{"折田":"@yuki_orita","藤原":"@ryusei.f",...}'
+   ASSIGNEE_MENTIONS='{"例１":"@example_1","例２":"@example_2",...}'
 
    # 本番環境
    wrangler secret put ASSIGNEE_MENTIONS
